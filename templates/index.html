@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --dark-bg: #1a1a1a;
+            --dark-secondary: #2d2d2d;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --select-bg-dark: #2d2d2d;
+            --select-text-dark: #ffffff;
+        }
+
+        * {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body.light-theme {
+            background-color: #f8f9fa;
+            color: var(--text-dark);
+        }
+
+        body.dark-theme {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+        }
+
+        .hero.light-theme {
+            background: linear-gradient(135deg, var(--primary-color), #357abd);
+            color: white;
+        }
+
+        .hero.dark-theme {
+            background: linear-gradient(135deg, var(--dark-secondary), #1a1a1a);
+            color: white;
+        }
+
+        .hero {
+            padding: 4rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1));
+            pointer-events: none;
+        }
+
+        .hero .title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+
+        .box {
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: -4rem;
+            background: white;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .dark-theme .box {
+            background: var(--dark-secondary);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .input {
+            border-radius: 8px;
+            height: 3rem;
+            box-shadow: none;
+            border: 2px solid #eee;
+            transition: all 0.3s ease;
+            padding-left: 1rem;
+        }
+
+        .dark-theme .input {
+            background: var(--dark-bg);
+            border-color: #444;
+            color: white;
+        }
+
+        .input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
+
+        .select select {
+            border-radius: 8px;
+            height: 3rem;
+            transition: all 0.3s ease;
+            border: 2px solid #eee;
+            background-color: white;
+            color: var(--text-dark);
+            cursor: pointer;
+            padding-left: 1rem;
+        }
+
+        .dark-theme .select select {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            border-color: #444;
+        }
+
+        .dark-theme .select:not(.is-multiple):not(.is-loading)::after {
+            border-color: var(--text-light);
+        }
+
+        .select select:hover, .dark-theme .select select:hover {
+            border-color: var(--primary-color);
+        }
+
+        .select select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
+
+        .dark-theme option {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+        }
+
+        .button.is-link {
+            background-color: var(--primary-color);
+            border-radius: 8px;
+            padding: 0 2rem;
+            height: 3rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button.is-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        .button.is-link:active {
+            transform: translateY(0);
+        }
+
+        .button.is-loading {
+            color: transparent !important;
+            pointer-events: none;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 100;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dark-theme .theme-toggle {
+            background: var(--dark-secondary);
+            color: white;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(180deg);
+        }
+
+        .notification {
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1.25rem;
+        }
+
+        .notification .icon {
+            font-size: 1.25rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .footer {
+            background: transparent;
+            padding: 3rem 1.5rem;
+            color: inherit;
+            text-align: center;
+        }
+
+        .footer p {
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 960px;
+        }
+
+        .label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: inherit;
+        }
+
+        .dark-theme .label {
+            color: var(--text-light);
+        }
+
+        .field:not(:last-child) {
+            margin-bottom: 1.5rem;
+        }
+
+        .columns {
+            margin-top: 1rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-overlay.is-active {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <section class="hero is-medium light-theme">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title has-text-centered">Video Downloader</h1>
+                <h2 class="subtitle has-text-centered">Download videos from YouTube, Facebook, Instagram, and more</h2>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="box">
+                <form method="POST" onsubmit="showLoading()">
+                    <div class="field">
+                        <label class="label">Video URL</label>
+                        <div class="control has-icons-left">
+                            <input class="input" type="text" name="url" placeholder="Paste your video URL here..." required>
+                            <span class="icon is-small is-left">
+                                <i class="fas fa-link"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="columns">
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Format</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select name="format" required>
+                                            <option value="mp4">MP4 (Video)</option>
+                                            <option value="mp3">MP3 (Audio)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="field">
+                                <label class="label">Quality</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select name="quality" required>
+                                            <option value="highest">Best Quality</option>
+                                            <option value="720p">720p</option>
+                                            <option value="480p">480p</option>
+                                            <option value="360p">360p</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-link is-fullwidth" id="downloadBtn">
+                                <span class="icon">
+                                    <i class="fas fa-download"></i>
+                                </span>
+                                <span>Download Video</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% if request.args.get('success') %}
+                    <div class="notification is-success">
+                        <span class="icon">
+                            <i class="fas fa-check-circle"></i>
+                        </span>
+                        <span>Video downloaded successfully!</span>
+                    </div>
+                {% elif request.args.get('error') %}
+                    <div class="notification is-danger">
+                        <span class="icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </span>
+                        <span>Error: {{ request.args.get('error') }}</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p>&copy; 2024 Video Downloader. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const hero = document.querySelector('.hero');
+            const themeToggle = document.querySelector('.theme-toggle i');
+            
+            body.classList.toggle('dark-theme');
+            body.classList.toggle('light-theme');
+            hero.classList.toggle('dark-theme');
+            hero.classList.toggle('light-theme');
+            
+            themeToggle.classList.toggle('fa-moon');
+            themeToggle.classList.toggle('fa-sun');
+        }
+
+        function showLoading() {
+            document.querySelector('.loading-overlay').classList.add('is-active');
+            document.querySelector('#downloadBtn').classList.add('is-loading');
+        }
+
+        // Store theme preference
+        function saveThemePreference() {
+            const isDark = document.body.classList.contains('dark-theme');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Load theme preference
+        function loadThemePreference() {
+            const theme = localStorage.getItem('theme');
+            if (theme === 'dark' && !document.body.classList.contains('dark-theme')) {
+                toggleTheme();
+            }
+        }
+
+        // Add event listener for theme toggle
+        document.querySelector('.theme-toggle').addEventListener('click', () => {
+            saveThemePreference();
+        });
+
+        // Load theme preference on page load
+        document.addEventListener('DOMContentLoaded', loadThemePreference);
+    </script>
+</body>
+</html>
