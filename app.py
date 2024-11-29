@@ -11,15 +11,28 @@ def index():
         try:
             url = request.form['url']
             format_option = request.form.get('format', 'mp4')
-            quality = request.form.get('quality', 'best')
+            quality = request.form.get('quality', 'highest')
+
+            # Create downloads directory if it doesn't exist
+            if not os.path.exists('downloads'):
+                os.makedirs('downloads')
 
             ydl_opts = {
-                'format': 'best' if quality == 'best' else f'best[height<={quality}]',
                 'outtmpl': '%(title)s.%(ext)s',
                 'paths': {'home': 'downloads'},
             }
 
-            if format_option == 'mp3':
+            # Set format based on quality selection
+            if format_option == 'mp4':
+                if quality == 'highest':
+                    ydl_opts['format'] = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best'
+                elif quality == '720p':
+                    ydl_opts['format'] = 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best'
+                elif quality == '480p':
+                    ydl_opts['format'] = 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]/best'
+                else:  # 360p
+                    ydl_opts['format'] = 'bestvideo[height<=360][ext=mp4]+bestaudio[ext=m4a]/best[height<=360][ext=mp4]/best'
+            elif format_option == 'mp3':
                 ydl_opts.update({
                     'format': 'bestaudio/best',
                     'postprocessors': [{
